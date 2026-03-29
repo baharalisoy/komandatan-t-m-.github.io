@@ -1,0 +1,2327 @@
+<!DOCTYPE html>
+<html lang="az" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberCode - Komanda Təqdimatı</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#06b6d4',
+                        secondary: '#8b5cf6',
+                        accent: '#ec4899',
+                        dark: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .reveal { opacity: 0; transform: translateY(30px); transition: all 0.8s ease; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .nav-link { position: relative; }
+        .nav-link::after {
+            content: ''; position: absolute; width: 0; height: 2px; bottom: -5px; left: 0;
+            background: linear-gradient(90deg, #06b6d4, #8b5cf6); transition: width 0.3s;
+        }
+        .nav-link:hover::after { width: 100%; }
+        .cyber-grid {
+            background-image: linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .upload-area {
+            border: 2px dashed #06b6d4; transition: all 0.3s;
+        }
+        .upload-area:hover { background: rgba(6, 182, 212, 0.1); border-color: #8b5cf6; }
+        .upload-area.dragover { background: rgba(6, 182, 212, 0.2); border-color: #ec4899; }
+        .tab-active { background: linear-gradient(135deg, #06b6d4, #8b5cf6); color: white; }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #06b6d4, #8b5cf6); border-radius: 5px; }
+        .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        /* News ticker animation */
+        @keyframes ticker {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .ticker-wrap {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .ticker {
+            display: inline-block;
+            animation: ticker 30s linear infinite;
+        }
+        .ticker:hover {
+            animation-play-state: paused;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body class="font-sans antialiased bg-white dark:bg-dark text-gray-900 dark:text-white transition-colors duration-300">
+
+    <!-- Breaking News Ticker (Fixed Top) -->
+    <div id="newsTicker" class="fixed top-0 w-full z-50 bg-gradient-to-r from-primary via-secondary to-accent text-white py-2 hidden">
+        <div class="ticker-wrap">
+            <div class="ticker text-sm font-medium" id="tickerContent">
+                <!-- News items will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Modal -->
+    <div id="setupModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-3xl max-w-lg w-full mx-4 shadow-2xl border border-primary/20">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center text-white text-3xl">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h2 class="text-3xl font-bold mb-2">CyberCode</h2>
+                <p class="text-gray-600 dark:text-gray-300">Komanda saytınızı quraq</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Komandanızda neçə nəfər var?</label>
+                    <input type="number" id="teamCount" min="1" max="20" value="4" 
+                        class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none text-center text-2xl font-bold transition">
+                </div>
+                <button onclick="startSetup()" class="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-bold text-lg hover:shadow-lg hover:scale-[1.02] transition transform">
+                    Başla <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Member Setup Modal -->
+    <div id="memberModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md overflow-y-auto">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-3xl max-w-2xl w-full mx-4 my-8 shadow-2xl border border-primary/20">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Komanda Üzvü <span id="currentMemberNum">1</span></h3>
+                <button onclick="skipSetup()" class="text-gray-500 hover:text-primary"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="memberForm" class="space-y-4" onsubmit="saveMember(event)">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Ad Soyad *</label>
+                        <input type="text" id="memberName" required class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition" placeholder="Ad Soyad">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Vəzifə *</label>
+                        <input type="text" id="memberRole" required class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition" placeholder="Məs: Frontend Developer">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Bio / Haqqında *</label>
+                    <textarea id="memberBio" rows="3" required class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition resize-none" placeholder="Üzv haqqında ətraflı məlumat..."></textarea>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Təcrübə (il)</label>
+                        <input type="number" id="memberExp" min="0" class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition" placeholder="5">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Təhsil</label>
+                        <input type="text" id="memberEdu" class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition" placeholder="Bakalavr/Magistr">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Bacarıqlar (vergüllə ayırın)</label>
+                    <input type="text" id="memberSkills" class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition" placeholder="React, Node.js, Python, ...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Şəkil *</label>
+                    <div class="upload-area rounded-2xl p-8 text-center cursor-pointer relative" onclick="document.getElementById('memberImage').click()" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
+                        <input type="file" id="memberImage" accept="image/*" class="hidden" onchange="previewImage(this)" required>
+                        <div id="uploadPlaceholder">
+                            <i class="fas fa-cloud-upload-alt text-4xl text-primary mb-3"></i>
+                            <p class="text-gray-600 dark:text-gray-300">Şəkil yükləmək üçün klikləyin və ya sürükləyin</p>
+                        </div>
+                        <img id="imagePreview" class="hidden w-full h-48 object-cover rounded-xl mx-auto">
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2"><i class="fab fa-linkedin text-blue-600"></i> LinkedIn</label>
+                        <input type="url" id="memberLinkedin" class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none text-sm transition" placeholder="https://...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2"><i class="fab fa-github text-gray-800 dark:text-white"></i> GitHub</label>
+                        <input type="url" id="memberGithub" class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none text-sm transition" placeholder="https://...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2"><i class="fas fa-envelope text-red-500"></i> Email</label>
+                        <input type="email" id="memberEmail" class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none text-sm transition" placeholder="email@...">
+                    </div>
+                </div>
+                <div class="flex gap-4 pt-4">
+                    <button type="button" onclick="skipMember()" class="flex-1 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold hover:border-primary hover:text-primary transition">Keç</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold hover:shadow-lg transition flex items-center justify-center gap-2">
+                        <span>Saxla</span><i class="fas fa-check"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="mt-4 text-center">
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div id="progressBar" class="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p class="text-sm text-gray-500 mt-2"><span id="savedCount">0</span> / <span id="totalCount">4</span> üzv əlavə edildi</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md overflow-y-auto">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-3xl max-w-2xl w-full mx-4 my-8 shadow-2xl border border-primary/20">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Redaktə Et</h3>
+                <button onclick="closeEditModal()" class="text-gray-500 hover:text-primary"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form id="editForm" class="space-y-4" onsubmit="updateMember(event)">
+                <input type="hidden" id="editIndex">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Ad Soyad *</label>
+                        <input type="text" id="editName" required class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Vəzifə *</label>
+                        <input type="text" id="editRole" required class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Bio</label>
+                    <textarea id="editBio" rows="3" class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition resize-none"></textarea>
+                </div>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Təcrübə (il)</label>
+                        <input type="number" id="editExp" class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Təhsil</label>
+                        <input type="text" id="editEdu" class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Bacarıqlar</label>
+                    <input type="text" id="editSkills" class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Yeni Şəkil (dəyişmək istəmirsinizsə boş qoyun)</label>
+                    <div class="upload-area rounded-2xl p-4 text-center cursor-pointer" onclick="document.getElementById('editImage').click()" ondrop="dropHandlerEdit(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
+                        <input type="file" id="editImage" accept="image/*" class="hidden" onchange="previewEditImage(this)">
+                        <img id="editImagePreview" class="w-32 h-32 object-cover rounded-xl mx-auto mb-2">
+                        <p class="text-sm text-gray-500">Yeni şəkil üçün klikləyin</p>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">LinkedIn</label>
+                        <input type="url" id="editLinkedin" class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">GitHub</label>
+                        <input type="url" id="editGithub" class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Email</label>
+                        <input type="email" id="editEmail" class="w-full px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none text-sm">
+                    </div>
+                </div>
+                <div class="flex gap-4 pt-4">
+                    <button type="button" onclick="deleteMember()" class="flex-1 py-3 border-2 border-red-500 text-red-500 rounded-xl font-semibold hover:bg-red-50 transition"><i class="fas fa-trash mr-2"></i>Sil</button>
+                    <button type="submit" class="flex-1 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold hover:shadow-lg transition">Yadda Saxla</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Panel Modal -->
+    <div id="adminModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-md overflow-y-auto">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-3xl max-w-5xl w-full mx-4 my-8 shadow-2xl border border-primary/20 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center text-white">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold">Admin Panel</h3>
+                        <p class="text-sm text-gray-500">İdarəetmə Mərkəzi</p>
+                    </div>
+                </div>
+                <button onclick="closeAdminModal()" class="text-gray-500 hover:text-primary"><i class="fas fa-times text-xl"></i></button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button onclick="switchAdminTab('cvs')" id="tab-cvs" class="px-4 py-2 rounded-full font-medium transition tab-active">CV-lər <span id="cvCount" class="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-xs">0</span></button>
+                <button onclick="switchAdminTab('messages')" id="tab-messages" class="px-4 py-2 rounded-full font-medium transition bg-gray-200 dark:bg-gray-700">Mesajlar <span id="msgCount" class="ml-2 bg-gray-400 dark:bg-gray-600 px-2 py-0.5 rounded-full text-xs">0</span></button>
+                <button onclick="switchAdminTab('news')" id="tab-news" class="px-4 py-2 rounded-full font-medium transition bg-gray-200 dark:bg-gray-700">Xəbərlər <span id="newsCount" class="ml-2 bg-gray-400 dark:bg-gray-600 px-2 py-0.5 rounded-full text-xs">0</span></button>
+                <button onclick="switchAdminTab('team')" id="tab-team" class="px-4 py-2 rounded-full font-medium transition bg-gray-200 dark:bg-gray-700">Komanda</button>
+            </div>
+
+            <!-- CVs Tab -->
+            <div id="admin-cvs" class="space-y-4">
+                <div id="cvList" class="space-y-4"></div>
+                <div id="noCvs" class="hidden text-center py-12 text-gray-500">
+                    <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
+                    <p>Hələ heç bir CV qəbul edilməyib</p>
+                </div>
+            </div>
+
+            <!-- Messages Tab -->
+            <div id="admin-messages" class="hidden space-y-4">
+                <div id="messageList" class="space-y-4"></div>
+                <div id="noMessages" class="hidden text-center py-12 text-gray-500">
+                    <i class="fas fa-inbox text-4xl mb-3 opacity-50"></i>
+                    <p>Hələ heç bir mesaj yoxdur</p>
+                </div>
+            </div>
+
+            <!-- News Tab -->
+            <div id="admin-news" class="hidden space-y-6">
+                <div class="glass p-6 rounded-2xl border border-primary/20">
+                    <h4 class="font-bold text-lg mb-4 flex items-center gap-2">
+                        <i class="fas fa-plus-circle text-primary"></i>
+                        Yeni Yenilik Əlavə Et
+                    </h4>
+                    <form id="newsForm" class="space-y-4" onsubmit="addNews(event)">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Başlıq *</label>
+                                <input type="text" id="newsTitle" required class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition" placeholder="Yenilik başlığı...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Kateqoriya *</label>
+                                <select id="newsCategory" required class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition">
+                                    <option value="Layihə">Layihə</option>
+                                    <option value="Mükafat">Mükafat</option>
+                                    <option value="Tədbir">Tədbir</option>
+                                    <option value="Məqalə">Məqalə</option>
+                                    <option value="Əməkdaşlıq">Əməkdaşlıq</option>
+                                    <option value="Digər">Digər</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Qısa Təsvir *</label>
+                            <input type="text" id="newsExcerpt" required class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition" placeholder="Bir sətərlik qısa təsvir...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Ətraflı Məzmun *</label>
+                            <textarea id="newsContent" rows="4" required class="w-full px-4 py-3 rounded-xl bg-gray-100 dark:bg-gray-700 border-2 border-transparent focus:border-primary outline-none transition resize-none" placeholder="Ətraflı məzmun..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Şəkil (istəyə bağlı)</label>
+                            <div class="upload-area rounded-2xl p-4 text-center cursor-pointer" onclick="document.getElementById('newsImage').click()" ondrop="dropNewsHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
+                                <input type="file" id="newsImage" accept="image/*" class="hidden" onchange="previewNewsImage(this)">
+                                <div id="newsUploadPlaceholder">
+                                    <i class="fas fa-image text-2xl text-primary mb-2"></i>
+                                    <p class="text-sm text-gray-600 dark:text-gray-300">Şəkil əlavə etmək üçün klikləyin</p>
+                                </div>
+                                <img id="newsImagePreview" class="hidden w-full h-32 object-cover rounded-xl mx-auto">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="newsPinned" class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary">
+                                <span class="text-sm font-medium">Əsas səhifədə sabitlə</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" id="newsBreaking" class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary">
+                                <span class="text-sm font-medium">Breaking News (ticker)</span>
+                            </label>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-semibold hover:shadow-lg transition flex items-center justify-center gap-2">
+                            <i class="fas fa-paper-plane"></i>
+                            Yayımla
+                        </button>
+                    </form>
+                </div>
+
+                <div>
+                    <h4 class="font-bold text-lg mb-4">Bütün Xəbərlər</h4>
+                    <div id="adminNewsList" class="space-y-4"></div>
+                </div>
+            </div>
+
+            <!-- Team Edit Tab -->
+            <div id="admin-team" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h4 class="font-bold text-lg">Komanda Üzvləri</h4>
+                    <button onclick="resetSetup()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
+                        <i class="fas fa-trash mr-2"></i>Hamısını Sil
+                    </button>
+                </div>
+                <div id="adminTeamList" class="grid gap-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- News Detail Modal -->
+    <div id="newsDetailModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/90 backdrop-blur-md overflow-y-auto p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-3xl max-w-3xl w-full shadow-2xl border border-primary/20 overflow-hidden">
+            <div class="relative h-64 overflow-hidden" id="newsDetailImageContainer">
+                <img id="newsDetailImage" src="" alt="" class="w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                <button onclick="closeNewsDetail()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white hover:bg-white/40 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="absolute bottom-4 left-6 right-6">
+                    <span id="newsDetailCategory" class="px-3 py-1 bg-primary text-white rounded-full text-xs font-semibold mb-2 inline-block"></span>
+                    <h2 id="newsDetailTitle" class="text-3xl font-bold text-white"></h2>
+                    <p id="newsDetailDate" class="text-gray-300 text-sm mt-1"></p>
+                </div>
+            </div>
+            <div class="p-8">
+                <div id="newsDetailContent" class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed"></div>
+                <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <span class="text-sm text-gray-500">CyberCode Team</span>
+                    <button onclick="closeNewsDetail()" class="px-6 py-2 bg-gray-100 dark:bg-gray-700 rounded-full hover:bg-primary hover:text-white transition">Bağla</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CV Detail Modal -->
+    <div id="cvDetailModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/90 backdrop-blur-md overflow-y-auto">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-3xl max-w-3xl w-full mx-4 my-8 shadow-2xl border border-primary/20">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 class="text-2xl font-bold mb-1" id="cvDetailName">Ad Soyad</h3>
+                    <p class="text-primary" id="cvDetailPosition">Vəzifə</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="downloadCV()" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition text-sm">
+                        <i class="fas fa-download mr-2"></i>CV-ni Yüklə
+                    </button>
+                    <button onclick="closeCVDetail()" class="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center hover:bg-red-500 hover:text-white transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="cvDetailContent" class="space-y-6"></div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-40 transition-all duration-300" id="navbar" style="top: 0;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <div class="w-12 h-12 bg-gradient-to-br from-primary via-secondary to-accent rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-primary/30">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <span class="font-display font-bold text-2xl tracking-tight">CyberCode</span>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#home" class="nav-link font-medium hover:text-primary transition">Ana Səhifə</a>
+                    <a href="#achievements" class="nav-link font-medium hover:text-primary transition">Qalibiyyətlər</a>
+                    <a href="#projects" class="nav-link font-medium hover:text-primary transition">Layihələr</a>
+                    <a href="#team" class="nav-link font-medium hover:text-primary transition">Komanda</a>
+                    <a href="#news" class="nav-link font-medium hover:text-primary transition">Xəbərlər</a>
+                    <a 
+                    <a href="#contact" class="nav-link font-medium hover:text-primary transition">Əlaqə</a>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                        <i class="fas fa-moon dark:hidden text-xl"></i>
+                        <i class="fas fa-sun hidden dark:block text-xl text-yellow-400"></i>
+                    </button>
+                    <button onclick="openAdminPanel()" class="hidden md:block px-4 py-2 text-sm border border-primary text-primary rounded-full hover:bg-primary hover:text-white transition">
+                        <i class="fas fa-lock mr-1"></i> Admin
+                    </button>
+                    <button class="md:hidden p-2" onclick="toggleMobileMenu()">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden glass absolute w-full">
+            <div class="px-4 pt-2 pb-6 space-y-2">
+                <a href="#home" class="block py-2 hover:text-primary">Ana Səhifə</a>
+                <a href="#achievements" class="block py-2 hover:text-primary">Qalibiyyətlər</a>
+                <a href="#projects" class="block py-2 hover:text-primary">Layihələr</a>
+                <a href="#team" class="block py-2 hover:text-primary">Komanda</a>
+                <a href="#news" class="block py-2 hover:text-primary">Xəbərlər</a>
+                
+                <a href="#contact" class="block py-2 hover:text-primary">Əlaqə</a>
+                <button onclick="openAdminPanel()" class="w-full text-left py-2 text-primary border-t border-gray-200 dark:border-gray-700 mt-2 pt-2">
+                    <i class="fas fa-lock mr-2"></i>Admin Panel
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 cyber-grid">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent"></div>
+        <div class="absolute top-20 left-10 w-72 h-72 bg-primary/30 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center space-y-8 reveal active">
+                <div class="inline-flex items-center space-x-2 px-6 py-3 rounded-full glass text-primary font-medium animate-pulse">
+                    <i class="fas fa-terminal mr-2"></i>
+                    <span>CyberCode Team - 2025</span>
+                </div>
+                
+                <h1 class="font-display text-6xl md:text-8xl font-bold leading-tight">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent">CyberCode</span>
+                </h1>
+                
+                <p class="text-2xl md:text-3xl text-gray-600 dark:text-gray-300 font-light max-w-3xl mx-auto">
+                    Kod yazmağın sənəti. Gələcəyi proqramlaşdırırıq.
+                </p>
+                
+                <!-- Pinned News on Hero -->
+                <div id="heroPinnedNews" class="max-w-2xl mx-auto hidden">
+                    <div class="glass rounded-2xl p-6 border border-primary/30 text-left">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="px-2 py-1 bg-primary text-white rounded text-xs font-bold">SON XƏBƏR</span>
+                            <span class="text-xs text-gray-500" id="heroNewsDate"></span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2 text-gradient" id="heroNewsTitle"></h3>
+                        <p class="text-gray-600 dark:text-gray-300 text-sm mb-3" id="heroNewsExcerpt"></p>
+                        <button onclick="openNewsDetailFromHero()" class="text-primary hover:text-secondary text-sm font-semibold flex items-center gap-1">
+                            Ətraflı oxu <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap justify-center gap-4 pt-8">
+                    <a href="#team" class="px-8 py-4 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-semibold hover:shadow-lg hover:shadow-primary/50 hover:scale-105 transition transform flex items-center gap-2">
+                        <i class="fas fa-users"></i> Komandamız
+                    </a>
+                    <a href="#news" class="px-8 py-4 border-2 border-primary text-primary rounded-full font-semibold hover:bg-primary hover:text-white transition flex items-center gap-2">
+                        <i class="fas fa-newspaper"></i> Xəbərlər
+                    </a>
+                </div>
+
+                <div class="flex justify-center items-center space-x-12 pt-12">
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-gradient mb-1" id="heroProjectCount">0</div>
+                        <div class="text-sm text-gray-500 uppercase tracking-wider">Layihə</div>
+                    </div>
+                    <div class="w-px h-16 bg-gradient-to-b from-primary to-secondary"></div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-gradient mb-1" id="heroMemberCount">0</div>
+                        <div class="text-sm text-gray-500 uppercase tracking-wider">Üzv</div>
+                    </div>
+                    <div class="w-px h-16 bg-gradient-to-b from-secondary to-accent"></div>
+                    <div class="text-center">
+                        <div class="text-4xl font-bold text-gradient mb-1" id="heroNewsCount">0</div>
+                        <div class="text-sm text-gray-500 uppercase tracking-wider">Xəbər</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <a href="#about" class="text-primary hover:text-secondary transition"><i class="fas fa-chevron-down text-3xl"></i></a>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="achievements" class="py-24 relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div class="order-2 md:order-1 reveal">
+                    <div class="relative">
+                        <div class="absolute inset-0 bg-gradient-to-r from-primary to-secondary rounded-3xl transform rotate-3 opacity-20"></div>
+                        <div class="relative bg-gray-900 rounded-3xl p-8 shadow-2xl overflow-hidden">
+                            <div class="cyber-grid absolute inset-0 opacity-30"></div>
+                            <div class="relative z-10 space-y-4">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <pre class="text-sm md:text-base text-green-400 font-mono overflow-x-auto"><code id="typewriter">const CyberCode = {
+    founded: 2020,
+    location: "Baku, Azerbaijan",
+    type: "Software Development",
+    team_size: <span id="codeTeamSize">4</span>,
+    
+    specialties: [
+        "Web Development",
+        "Mobile Apps",
+        "AI Solutions",
+        "Blockchain",
+        "Cloud Architecture"
+    ],
+    
+    mission: () => {
+        return "Transform ideas into 
+                digital reality";
+    }
+};</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-1 md:order-2 space-y-6 reveal">
+                    <div class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm border border-primary/20">
+                        <i class="fas fa-trophy mr-2"></i>Qalibiyyətlər
+                    </div>
+                    <h2 class="font-display text-4xl md:text-5xl font-bold">
+                        Komandamızın <span class="text-gradient">Qalibiyyətləri</span>
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+                        CyberCode 2020-ci ildə yaradılmış, yüksək texnologiyalar və innovativ həllər üzrə ixtisaslaşmış developer komandasıdır. Biz sadəcə kod yazmırıq, biz problemləri həll edirik.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-4 pt-4">
+                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-primary transition">
+                            <i class="fas fa-rocket text-primary text-2xl mb-2"></i>
+                            <h4 class="font-bold">Sürətli Inkişaf</h4>
+                            <p class="text-sm text-gray-500">Agile metodologiya</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-secondary transition">
+                            <i class="fas fa-shield-alt text-secondary text-2xl mb-2"></i>
+                            <h4 class="font-bold">Təhlükəsizlik</h4>
+                            <p class="text-sm text-gray-500">Enterprise-grade</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-accent transition">
+                            <i class="fas fa-brain text-accent text-2xl mb-2"></i>
+                            <h4 class="font-bold">AI İnteqrasiyası</h4>
+                            <p class="text-sm text-gray-500">Süni intellekt</p>
+                        </div>
+                        <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-primary transition">
+                            <i class="fas fa-globe text-primary text-2xl mb-2"></i>
+                            <h4 class="font-bold">Global Miqyas</h4>
+                            <p class="text-sm text-gray-500">Beynəlxalq layihələr</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mission/Vision/Values Section -->
+    <section id="achievements-section" class="py-24 bg-gray-50 dark:bg-gray-900/30 relative overflow-hidden">
+        <div class="absolute inset-0 cyber-grid opacity-20"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16 reveal">
+                <div class="inline-block px-4 py-1 rounded-full bg-secondary/10 text-secondary font-semibold text-sm mb-4 border border-secondary/20">
+                    <i class="fas fa-trophy mr-2"></i>Uğurlarımız
+                </div>
+                <h2 class="font-display text-4xl md:text-5xl font-bold mb-4">
+                    Əldə Etdiyimiz <span class="text-gradient">Uğurlar</span>
+                </h2>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8 mb-16" id="achievementsGrid">
+                <!-- Achievements will be loaded from localStorage -->
+            </div>
+
+            <!-- Add Achievement Button (Admin only - will show with password) -->
+            <div class="text-center mb-8">
+                <button onclick="openAchievementEditor()" class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-semibold hover:shadow-lg transition inline-flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Qalibiyyət Əlavə Et
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section id="team" class="py-24 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <div class="inline-block px-4 py-1 rounded-full bg-secondary/10 text-secondary font-semibold text-sm mb-4 border border-secondary/20">
+                    <i class="fas fa-users mr-2"></i>Komandamız
+                </div>
+                <h2 class="font-display text-4xl md:text-5xl font-bold mb-4">
+                    <span class="text-gradient">Developer</span> Komandamız
+                </h2>
+                <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto text-lg">
+                    Hər biri öz sahəsinin eksperti olan komanda üzvlərimizlə tanış olun
+                </p>
+                <button onclick="resetSetup()" class="mt-6 px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-semibold hover:shadow-lg transition inline-flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Yeni Üzv Əlavə Et
+                </button>
+            </div>
+
+            <div id="teamGrid" class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"></div>
+            <div id="emptyTeamMessage" class="hidden text-center py-16">
+                <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-4xl text-gray-400">
+                    <i class="fas fa-users-slash"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Komanda üzvü yoxdur</h3>
+                <button onclick="resetSetup()" class="px-6 py-3 bg-primary text-white rounded-full hover:bg-primary/90 transition">İndi Əlavə Et</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- News Section -->
+    <section id="news" class="py-24 bg-gray-50 dark:bg-gray-900/30 relative overflow-hidden">
+        <div class="absolute inset-0 cyber-grid opacity-20"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="text-center mb-16 reveal">
+                <div class="inline-block px-4 py-1 rounded-full bg-accent/10 text-accent font-semibold text-sm mb-4 border border-accent/20">
+                    <i class="fas fa-newspaper mr-2"></i>Xəbərlər
+                </div>
+                <h2 class="font-display text-4xl md:text-5xl font-bold mb-4">
+                    Son <span class="text-gradient">Xəbərlər</span>
+                </h2>
+                <p class="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto text-lg">
+                    Komandamızın son layihələri, mükafatları və əməkdaşlıqları haqqında xəbərlər
+                </p>
+            </div>
+
+            <!-- Featured News (Pinned) -->
+            <div id="featuredNews" class="mb-12 hidden reveal">
+                <div class="glass rounded-3xl overflow-hidden border border-primary/20">
+                    <div class="grid md:grid-cols-2">
+                        <div class="h-64 md:h-auto relative overflow-hidden">
+                            <img id="featuredImage" src="" alt="" class="w-full h-full object-cover">
+                            <div class="absolute top-4 left-4">
+                                <span class="px-4 py-2 bg-primary text-white rounded-full text-sm font-bold shadow-lg">
+                                    <i class="fas fa-thumbtack mr-2"></i>SABİT
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-8 flex flex-col justify-center">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span id="featuredCategory" class="px-3 py-1 bg-accent/20 text-accent rounded-full text-xs font-semibold"></span>
+                                <span id="featuredDate" class="text-sm text-gray-500"></span>
+                            </div>
+                            <h3 id="featuredTitle" class="text-2xl md:text-3xl font-bold mb-4"></h3>
+                            <p id="featuredExcerpt" class="text-gray-600 dark:text-gray-300 mb-6 line-clamp-3"></p>
+                            <button onclick="openFeaturedNews()" class="self-start px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-semibold hover:shadow-lg transition flex items-center gap-2">
+                                Ətraflı Oxu <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- News Grid -->
+            <div id="newsGrid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+            
+            <div id="emptyNews" class="hidden text-center py-16 reveal">
+                <div class="w-24 h-24 mx-auto mb-4 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center text-4xl text-gray-400">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <h3 class="text-xl font-bold mb-2">Hələ xəbər yoxdur</h3>
+                <p class="text-gray-500">Xəbərlər tezliklə əlavə ediləcək</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Career Section -->
+    <section id="career" class="py-24 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-dark relative overflow-hidden">
+        <div class="absolute inset-0 cyber-grid opacity-30"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <div class="reveal">
+                    <div class="inline-block px-4 py-1 rounded-full bg-accent/10 text-accent font-semibold text-sm mb-4 border border-accent/20">
+                        <i class="fas fa-briefcase mr-2"></i>
+                    </div>
+                    <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                        Komandamıza <span class="text-gradient">Qoşul</span>
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-300 text-lg mb-8">
+                        CyberCode-da hər kəsin fikri dəyərlidir. Biz daim istedadlı developer-lər axtarırıq.
+                    </p>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-4 p-4 rounded-xl glass">
+                            <div class="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                                <i class="fas fa-laptop-code text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Frontend Developer</h4>
+                                <p class="text-sm text-gray-500">React, Vue.js, Angular</p>
+                            </div>
+                            <span class="ml-auto px-3 py-1 bg-green-500/20 text-green-500 rounded-full text-xs font-semibold">Aktiv</span>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 rounded-xl glass">
+                            <div class="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center text-secondary">
+                                <i class="fas fa-server text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Backend Developer</h4>
+                                <p class="text-sm text-gray-500">Node.js, Python, Go</p>
+                            </div>
+                            <span class="ml-auto px-3 py-1 bg-green-500/20 text-green-500 rounded-full text-xs font-semibold">Aktiv</span>
+                        </div>
+                        <div class="flex items-center gap-4 p-4 rounded-xl glass">
+                            <div class="w-12 h-12 rounded-xl bg-accent/20 flex items-center justify-center text-accent">
+                                <i class="fas fa-mobile-alt text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Mobile Developer</h4>
+                                <p class="text-sm text-gray-500">Flutter, React Native</p>
+                            </div>
+                            <span class="ml-auto px-3 py-1 bg-yellow-500/20 text-yellow-500 rounded-full text-xs font-semibold">Tezliklə</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reveal">
+                    <form id="cvForm" class="glass p-8 rounded-3xl space-y-6 border border-white/20 shadow-2xl" onsubmit="submitCV(event)">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                            <i class="fas fa-file-upload text-primary"></i>
+                            CV Göndər
+                        </h3>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Ad Soyad *</label>
+                                <input type="text" id="cvName" required class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition" placeholder="Ad Soyad">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Email *</label>
+                                <input type="email" id="cvEmail" required class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition" placeholder="email@example.com">
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Telefon</label>
+                                <input type="tel" id="cvPhone" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition" placeholder="+994 50 123 45 67">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Vəzifə *</label>
+                                <select id="cvPosition" required class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition">
+                                    <option value="">Seçin...</option>
+                                    <option value="Frontend Developer">Frontend Developer</option>
+                                    <option value="Backend Developer">Backend Developer</option>
+                                    <option value="Full Stack Developer">Full Stack Developer</option>
+                                    <option value="Mobile Developer">Mobile Developer</option>
+                                    <option value="UI/UX Designer">UI/UX Designer</option>
+                                    <option value="DevOps Engineer">DevOps Engineer</option>
+                                    <option value="Digər">Digər</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Bacarıqlarınız</label>
+                            <input type="text" id="cvSkills" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition" placeholder="React, Node.js, Python, ...">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Özünüz haqqında *</label>
+                            <textarea id="cvAbout" rows="3" required class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition resize-none" placeholder="Qısa təqdimat..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">CV Faylı * (PDF, DOC, DOCX)</label>
+                            <div class="upload-area rounded-2xl p-6 text-center cursor-pointer relative" onclick="document.getElementById('cvFile').click()" ondrop="dropCVHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
+                                <input type="file" id="cvFile" accept=".pdf,.doc,.docx" class="hidden" onchange="previewCV(this)" required>
+                                <div id="cvUploadPlaceholder">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-primary mb-2"></i>
+                                    <p class="text-gray-600 dark:text-gray-300 text-sm">CV-nizi yükləmək üçün klikləyin və ya sürükləyin</p>
+                                    <p class="text-xs text-gray-400 mt-1">Maksimum 5MB</p>
+                                </div>
+                                <div id="cvFileInfo" class="hidden">
+                                    <i class="fas fa-file-alt text-3xl text-primary mb-2"></i>
+                                    <p class="font-medium text-gray-900 dark:text-white" id="cvFileName"></p>
+                                    <p class="text-xs text-gray-500" id="cvFileSize"></p>
+                                    <button type="button" onclick="event.stopPropagation(); removeCV()" class="mt-2 text-red-500 text-sm hover:underline">Sil</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">LinkedIn</label>
+                                <input type="url" id="cvLinkedin" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition" placeholder="https://linkedin.com/in/...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Portfolio/GitHub</label>
+                                <input type="url" id="cvPortfolio" class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition" placeholder="https://github.com/...">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-primary via-secondary to-accent text-white rounded-xl font-bold text-lg hover:shadow-lg hover:scale-[1.02] transition transform flex items-center justify-center gap-2 group">
+                            <span>Müraciət Et</span>
+                            <i class="fas fa-paper-plane group-hover:translate-x-1 transition-transform"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="py-24 bg-gray-50 dark:bg-gray-900/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <div class="inline-block px-4 py-1 rounded-full bg-accent/10 text-accent font-semibold text-sm mb-4 border border-accent/20">
+                    <i class="fas fa-folder-open mr-2"></i>Layihələr
+                </div>
+                <h2 class="font-display text-4xl md:text-5xl font-bold mb-4">
+                    Layihə <span class="text-gradient">Portfoliomuz</span>
+                </h2>
+            </div>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" id="projectsGrid">
+                <!-- Projects will be loaded from localStorage -->
+            </div>
+
+            <!-- Add Project Button -->
+            <div class="text-center mt-12">
+                <button onclick="openProjectEditor()" class="px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-semibold hover:shadow-lg transition inline-flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Layihə Əlavə Et
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-24 relative overflow-hidden">
+        <div class="absolute inset-0 cyber-grid opacity-30"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid md:grid-cols-2 gap-16">
+                <div class="reveal">
+                    <div class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary font-semibold text-sm mb-4 border border-primary/20">
+                        <i class="fas fa-envelope mr-2"></i>Əlaqə
+                    </div>
+                    <h2 class="font-display text-4xl md:text-5xl font-bold mb-6">
+                        Birlikdə <span class="text-gradient">Kod Yazaq</span>
+                    </h2>
+                    <p class="text-gray-600 dark:text-gray-300 text-lg mb-8">
+                        Layihəniz haqqında danışmaq və ya suallarınız var? Bizimlə əlaqə saxlayın.
+                    </p>
+
+                    <div class="space-y-6">
+                        <div class="flex items-center space-x-4 p-4 rounded-xl glass">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xl shadow-lg">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg">Ofisimiz</h4>
+                                <p class="text-gray-600 dark:text-gray-400">Bakı, Azərbaycan</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4 p-4 rounded-xl glass">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-secondary to-accent flex items-center justify-center text-white text-xl shadow-lg">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg">Email</h4>
+                                <p class="text-gray-600 dark:text-gray-400">team@cybercode.az</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4 p-4 rounded-xl glass">
+                            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-primary flex items-center justify-center text-white text-xl shadow-lg">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg">Telefon</h4>
+                                <p class="text-gray-600 dark:text-gray-400">+994 50 123 45 67</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex space-x-4">
+                        <a href="#" class="w-14 h-14 rounded-2xl glass flex items-center justify-center text-primary hover:bg-primary hover:text-white transition text-xl">
+                            <i class="fab fa-github"></i>
+                        </a>
+                        <a href="#" class="w-14 h-14 rounded-2xl glass flex items-center justify-center text-secondary hover:bg-secondary hover:text-white transition text-xl">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="#" class="w-14 h-14 rounded-2xl glass flex items-center justify-center text-accent hover:bg-accent hover:text-white transition text-xl">
+                            i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-14 h-14 rounded-2xl glass flex items-center justify-center text-primary hover:bg-primary hover:text-white transition text-xl">
+                            <i class="fab fa-discord"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="reveal">
+                    <form id="contactForm" class="glass p-8 rounded-3xl space-y-6 border border-white/20">
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Ad</label>
+                                <input type="text" required class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition" placeholder="Adınız">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Email</label>
+                                <input type="email" required class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition" placeholder="email@example.com">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Mövzu</label>
+                            <select class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition">
+                                <option>Layihə Təklifi</option>
+                                <option>Əməkdaşlıq</option>
+                                <option>Texniki Dəstək</option>
+                                <option>Digər</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Mesaj</label>
+                            <textarea rows="4" required class="w-full px-4 py-3 rounded-xl bg-white/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition resize-none" placeholder="Mesajınız..."></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-primary via-secondary to-accent text-white rounded-xl font-bold text-lg hover:shadow-lg hover:scale-[1.02] transition transform flex items-center justify-center gap-2 group">
+                            <span>Göndər</span>
+                            <i class="fas fa-paper-plane group-hover:translate-x-1 transition-transform"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12 border-t border-gray-800 relative overflow-hidden">
+        <div class="absolute inset-0 cyber-grid opacity-10"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div class="col-span-2">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-primary via-secondary to-accent rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                            <i class="fas fa-code"></i>
+                        </div>
+                        <span class="font-display font-bold text-2xl">CyberCode</span>
+                    </div>
+                    <p class="text-gray-400 max-w-sm mb-4">
+                        Texnologiya və innovasiyanın kəsişməsində, gələcəyi kodlayan developer komandası.
+                    </p>
+                    <div class="flex space-x-2">
+                        <span class="px-3 py-1 rounded-full bg-primary/20 text-primary text-xs border border-primary/30">#coding</span>
+                        <span class="px-3 py-1 rounded-full bg-secondary/20 text-secondary text-xs border border-secondary/30">#innovation</span>
+                        <span class="px-3 py-1 rounded-full bg-accent/20 text-accent text-xs border border-accent/30">#future</span>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-4 text-primary">Keçidlər</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="#home" class="hover:text-white transition">Ana Səhifə</a></li>
+                        <li><a href="#achievements" class="hover:text-white transition">Qalibiyyətlər</a></li>
+                        <li><a href="#projects" class="hover:text-white transition">Layihələr</a></li>
+                        <li><a href="#team" class="hover:text-white transition">Komanda</a></li>
+                        <li><a href="#news" class="hover:text-white transition">Xəbərlər</a></li>
+                        
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-bold mb-4 text-secondary">Əlaqə</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><i class="fas fa-envelope mr-2 text-primary"></i> team@cybercode.az</li>
+                        <li><i class="fas fa-phone mr-2 text-secondary"></i> +994 50 123 45 67</li>
+                        <li><i class="fas fa-map-marker-alt mr-2 text-accent"></i> Bakı, Azərbaycan</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-gray-500 text-sm">
+                    © 2025 <span class="text-primary">CyberCode</span>. Bütün hüquqlar qorunur.
+                </p>
+                <div class="flex space-x-6 mt-4 md:mt-0 text-sm text-gray-500">
+                    <a href="#" class="hover:text-white transition">Gizlilik</a>
+                    <a href="#" class="hover:text-white transition">Şərtlər</a>
+                    <button onclick="openAdminPanel()" class="hover:text-white transition flex items-center gap-1">
+                        <i class="fas fa-lock text-xs"></i> Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl max-w-md mx-4 text-center transform scale-95 opacity-0 transition-all duration-300" id="modalContent">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white text-2xl shadow-lg">
+                <i class="fas fa-check"></i>
+            </div>
+            <h3 class="text-2xl font-bold mb-2">Uğurlu!</h3>
+            <p class="text-gray-600 dark:text-gray-300 mb-6" id="successMessage">Mesajınız göndərildi.</p>
+            <button onclick="closeModal()" class="px-8 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-full font-semibold hover:shadow-lg transition">
+                Bağla
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let teamMembers = [];
+        let currentMemberIndex = 0;
+        let totalMembers = 4;
+        let tempImageData = null;
+        let currentCVFile = null;
+        let tempNewsImage = null;
+        let currentFeaturedNews = null;
+
+        // Default Projects
+        const defaultProjects = [
+            { title: "E-Ticarət Platforması", desc: "React & Node.js ilə hazırlanmış miqyaslı onlayn satış sistemi", tech: ["React", "Node.js", "MongoDB"], image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=450&fit=crop" },
+            { title: "AI Chatbot Sistemi", desc: "Süni intellekt əsasında müştəri dəstək chatbotu", tech: ["Python", "TensorFlow", "NLP"], image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=450&fit=crop" },
+            { title: "Blockchain Wallet", desc: "Təhlükəsiz kripto valyuta cüzdanı və DeFi platforması", tech: ["Solidity", "Web3.js", "Ethereum"], image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&h=450&fit=crop" },
+            { title: "IoT Monitoring", desc: "Real-time IoT cihaz izləmə və analitika paneli", tech: ["React", "MQTT", "AWS"], image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&h=450&fit=crop" },
+            { title: "Fintech App", desc: "Mobil bankçılıq və ödəniş tətbiqi", tech: ["Flutter", "Firebase", "Stripe"], image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600&h=450&fit=crop" },
+            { title: "Cloud CMS", desc: "Başlıca idarəetmə sistemi və məzmun platforması", tech: ["Next.js", "PostgreSQL", "Docker"], image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600&h=450&fit=crop" }
+        ];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTeam = localStorage.getItem('cybercode_team');
+            const setupDone = localStorage.getItem('cybercode_setup_done');
+            
+            if (savedTeam && setupDone) {
+                teamMembers = JSON.parse(savedTeam);
+                document.getElementById('setupModal').style.display = 'none';
+                renderTeam();
+                renderProjects();
+                renderNews();
+                updateHeroStats();
+                updateCodeTeamSize();
+                updateTicker();
+            } else {
+                document.getElementById('setupModal').style.display = 'flex';
+            }
+
+            if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+
+            window.addEventListener('scroll', reveal);
+            reveal();
+        });
+
+        function updateCodeTeamSize() {
+            const el = document.getElementById('codeTeamSize');
+            if (el) el.textContent = teamMembers.length;
+        }
+
+        function updateHeroStats() {
+            document.getElementById('heroMemberCount').textContent = teamMembers.length;
+            document.getElementById('heroProjectCount').textContent = defaultProjects.length;
+            const news = JSON.parse(localStorage.getItem('cybercode_news') || '[]');
+            document.getElementById('heroNewsCount').textContent = news.length;
+        }
+
+        // Setup Functions
+        function startSetup() {
+            totalMembers = parseInt(document.getElementById('teamCount').value) || 4;
+            document.getElementById('totalCount').textContent = totalMembers;
+            document.getElementById('setupModal').style.display = 'none';
+            document.getElementById('memberModal').classList.remove('hidden');
+            document.getElementById('memberModal').classList.add('flex');
+            currentMemberIndex = 0;
+            updateProgress();
+        }
+
+        function skipSetup() {
+            document.getElementById('memberModal').classList.add('hidden');
+            document.getElementById('memberModal').classList.remove('flex');
+            localStorage.setItem('cybercode_setup_done', 'true');
+            renderTeam();
+            renderProjects();
+            renderNews();
+            updateHeroStats();
+            updateCodeTeamSize();
+            updateTicker();
+        }
+
+        function resetSetup() {
+            if(confirm('Bütün komanda məlumatlarını silmək istədiyinizə əminsiniz?')) {
+                localStorage.removeItem('cybercode_team');
+                localStorage.removeItem('cybercode_setup_done');
+                teamMembers = [];
+                currentMemberIndex = 0;
+                location.reload();
+            }
+        }
+
+        // Member Functions
+        function saveMember(e) {
+            e.preventDefault();
+            const name = document.getElementById('memberName').value;
+            const role = document.getElementById('memberRole').value;
+            const bio = document.getElementById('memberBio').value;
+            const exp = document.getElementById('memberExp').value;
+            const edu = document.getElementById('memberEdu').value;
+            const skills = document.getElementById('memberSkills').value;
+            const linkedin = document.getElementById('memberLinkedin').value;
+            const github = document.getElementById('memberGithub').value;
+            const email = document.getElementById('memberEmail').value;
+
+            if (!tempImageData) {
+                alert('Zəhmət olmasa şəkil yükləyin!');
+                return;
+            }
+
+            const member = {
+                id: Date.now(), name, role, bio, image: tempImageData, linkedin, github, email,
+                experience: exp, education: edu, skills: skills.split(',').map(s => s.trim()).filter(s => s)
+            };
+
+            teamMembers.push(member);
+            currentMemberIndex++;
+            localStorage.setItem('cybercode_team', JSON.stringify(teamMembers));
+            localStorage.setItem('cybercode_setup_done', 'true');
+            updateProgress();
+
+            if (currentMemberIndex < totalMembers) {
+                document.getElementById('memberForm').reset();
+                document.getElementById('imagePreview').classList.add('hidden');
+                document.getElementById('uploadPlaceholder').classList.remove('hidden');
+                tempImageData = null;
+                document.getElementById('currentMemberNum').textContent = currentMemberIndex + 1;
+            } else {
+                document.getElementById('memberModal').classList.add('hidden');
+                document.getElementById('memberModal').classList.remove('flex');
+                renderTeam();
+                renderProjects();
+                renderNews();
+                updateHeroStats();
+                updateCodeTeamSize();
+                updateTicker();
+            }
+        }
+
+        function skipMember() {
+            currentMemberIndex++;
+            updateProgress();
+            if (currentMemberIndex >= totalMembers) {
+                document.getElementById('memberModal').classList.add('hidden');
+                document.getElementById('memberModal').classList.remove('flex');
+                renderTeam();
+                renderProjects();
+                renderNews();
+                updateHeroStats();
+                updateCodeTeamSize();
+                updateTicker();
+            } else {
+                document.getElementById('memberForm').reset();
+                document.getElementById('imagePreview').classList.add('hidden');
+                document.getElementById('uploadPlaceholder').classList.remove('hidden');
+                tempImageData = null;
+                document.getElementById('currentMemberNum').textContent = currentMemberIndex + 1;
+            }
+        }
+
+        function updateProgress() {
+            const progress = (currentMemberIndex / totalMembers) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('savedCount').textContent = currentMemberIndex;
+        }
+
+        // Image Handling
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempImageData = e.target.result;
+                    document.getElementById('imagePreview').src = e.target.result;
+                    document.getElementById('imagePreview').classList.remove('hidden');
+                    document.getElementById('uploadPlaceholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function dragOverHandler(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('dragover');
+        }
+
+        function dragLeaveHandler(e) {
+            e.currentTarget.classList.remove('dragover');
+        }
+
+        function dropHandler(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    tempImageData = event.target.result;
+                    document.getElementById('imagePreview').src = event.target.result;
+                    document.getElementById('imagePreview').classList.remove('hidden');
+                    document.getElementById('uploadPlaceholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(files[0]);
+            }
+        }
+
+        // News Functions
+        function previewNewsImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempNewsImage = e.target.result;
+                    document.getElementById('newsImagePreview').src = e.target.result;
+                    document.getElementById('newsImagePreview').classList.remove('hidden');
+                    document.getElementById('newsUploadPlaceholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function dropNewsHandler(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    tempNewsImage = event.target.result;
+                    document.getElementById('newsImagePreview').src = event.target.result;
+                    document.getElementById('newsImagePreview').classList.remove('hidden');
+                    document.getElementById('newsUploadPlaceholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(files[0]);
+            }
+        }
+
+        function addNews(e) {
+            e.preventDefault();
+            
+            const newsItem = {
+                id: Date.now(),
+                title: document.getElementById('newsTitle').value,
+                category: document.getElementById('newsCategory').value,
+                excerpt: document.getElementById('newsExcerpt').value,
+                content: document.getElementById('newsContent').value,
+                image: tempNewsImage || 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=800&h=600&fit=crop',
+                pinned: document.getElementById('newsPinned').checked,
+                breaking: document.getElementById('newsBreaking').checked,
+                date: new Date().toLocaleString('az-AZ', { day: 'numeric', month: 'long', year: 'numeric' })
+            };
+
+            let news = JSON.parse(localStorage.getItem('cybercode_news') || '[]');
+            news.unshift(newsItem);
+            localStorage.setItem('cybercode_news', JSON.stringify(news));
+
+            // Reset form
+            document.getElementById('newsForm').reset();
+            tempNewsImage = null;
+            document.getElementById('newsImagePreview').classList.add('hidden');
+            document.getElementById('newsUploadPlaceholder').classList.remove('hidden');
+
+            renderNews();
+            updateHeroStats();
+            updateTicker();
+            loadAdminData();
+            
+            showSuccess('Yenilik uğurla əlavə edildi!');
+        }
+
+        function renderNews() {
+            const news = JSON.parse(localStorage.getItem('cybercode_news') || '[]');
+            const grid = document.getElementById('newsGrid');
+            const emptyNews = document.getElementById('emptyNews');
+            const featuredDiv = document.getElementById('featuredNews');
+            const heroPinned = document.getElementById('heroPinnedNews');
+
+            // Handle featured/pinned news
+            const pinnedNews = news.find(n => n.pinned);
+            if (pinnedNews) {
+                currentFeaturedNews = pinnedNews;
+                featuredDiv.classList.remove('hidden');
+                document.getElementById('featuredImage').src = pinnedNews.image;
+                document.getElementById('featuredCategory').textContent = pinnedNews.category;
+                document.getElementById('featuredDate').textContent = pinnedNews.date;
+                document.getElementById('featuredTitle').textContent = pinnedNews.title;
+                document.getElementById('featuredExcerpt').textContent = pinnedNews.excerpt;
+
+                // Also show in hero
+                heroPinned.classList.remove('hidden');
+                document.getElementById('heroNewsTitle').textContent = pinnedNews.title;
+                document.getElementById('heroNewsExcerpt').textContent = pinnedNews.excerpt;
+                document.getElementById('heroNewsDate').textContent = pinnedNews.date;
+            } else {
+                featuredDiv.classList.add('hidden');
+                heroPinned.classList.add('hidden');
+            }
+
+            // Render news grid (excluding pinned)
+            const regularNews = news.filter(n => !n.pinned);
+            
+            if (regularNews.length === 0 && !pinnedNews) {
+                grid.innerHTML = '';
+                emptyNews.classList.remove('hidden');
+                return;
+            }
+            
+            emptyNews.classList.add('hidden');
+            grid.innerHTML = regularNews.map((item, index) => `
+                <div class="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg card-hover border border-gray-200 dark:border-gray-700 reveal">
+                    <div class="h-48 overflow-hidden relative">
+                        <img src="${item.image}" alt="${item.title}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                        <div class="absolute top-4 left-4">
+                            <span class="px-3 py-1 bg-primary/90 text-white rounded-full text-xs font-semibold">${item.category}</span>
+                        </div>
+                        ${item.breaking ? '<div class="absolute top-4 right-4 px-3 py-1 bg-red-500 text-white rounded-full text-xs font-bold animate-pulse">BREAKING</div>' : ''}
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                            <i class="far fa-calendar-alt"></i>
+                            <span>${item.date}</span>
+                        </div>
+                        <h3 class="text-xl font-bold mb-3 line-clamp-2 group-hover:text-primary transition">${item.title}</h3>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">${item.excerpt}</p>
+                        <button onclick="openNewsDetail(${item.id})" class="text-primary hover:text-secondary font-semibold text-sm flex items-center gap-1 group/btn">
+                            Ətraflı oxu <i class="fas fa-arrow-right transform group-hover/btn:translate-x-1 transition"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openNewsDetail(id) {
+            const news = JSON.parse(localStorage.getItem('cybercode_news') || '[]');
+            const item = news.find(n => n.id === id);
+            if (!item) return;
+
+            document.getElementById('newsDetailImage').src = item.image;
+            document.getElementById('newsDetailCategory').textContent = item.category;
+            document.getElementById('newsDetailTitle').textContent = item.title;
+            document.getElementById('newsDetailDate').textContent = item.date;
+            document.getElementById('newsDetailContent').textContent = item.content;
+            
+            document.getElementById('newsDetailModal').classList.remove('hidden');
+            document.getElementById('newsDetailModal').classList.add('flex');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function openFeaturedNews() {
+            if (currentFeaturedNews) {
+                openNewsDetail(currentFeaturedNews.id);
+            }
+        }
+
+        function openNewsDetailFromHero() {
+            if (currentFeaturedNews) {
+                openNewsDetail(currentFeaturedNews.id);
+            }
+        }
+
+        function closeNewsDetail() {
+            document.getElementById('newsDetailModal').classList.add('hidden');
+            document.getElementById('newsDetailModal').classList.remove('flex');
+            document.body.style.overflow = 'auto';
+        }
+
+        function deleteNews(id) {
+            if(!confirm('Bu xəbəri silmək istədiyinizə əminsiniz?')) return;
+            
+            let news = JSON.parse(localStorage.getItem('cybercode_news') || '[]');
+            news = news.filter(n => n.id !== id);
+            localStorage.setItem('cybercode_news', JSON.stringify(news));
+            
+            renderNews();
+            updateHeroStats();
+            updateTicker();
+            loadAdminData();
+        }
+
+        function updateTicker() {
+            const news = JSON.parse(localStorage.getItem('cybercode_news') || '[]');
+            const breakingNews = news.filter(n => n.breaking);
+            const ticker = document.getElementById('newsTicker');
+            const content = document.getElementById('tickerContent');
+            
+            if (breakingNews.length > 0) {
+                ticker.classList.remove('hidden');
+                // Duplicate items for seamless loop
+                const items = [...breakingNews, ...breakingNews];
+                content.innerHTML = items.map(n => `
+                    <span class="inline-flex items-center mx-8">
+                        <span class="w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse"></span>
+                        <span class="font-bold mr-2">BREAKING:</span>
+                        <span>${n.title}</span>
+                        <span class="mx-4 text-white/50">|</span>
+                    </span>
+                `).join('');
+                
+                // Adjust navbar top position
+                document.getElementById('navbar').style.top = '32px';
+            } else {
+                ticker.classList.add('hidden');
+                document.getElementById('navbar').style.top = '0';
+            }
+        }
+
+        // CV Functions
+        function previewCV(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Fayl həcmi 5MB-dan böyük ola bilməz!');
+                    input.value = '';
+                    return;
+                }
+                currentCVFile = file;
+                document.getElementById('cvFileName').textContent = file.name;
+                document.getElementById('cvFileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                document.getElementById('cvUploadPlaceholder').classList.add('hidden');
+                document.getElementById('cvFileInfo').classList.remove('hidden');
+            }
+        }
+
+        function removeCV() {
+            currentCVFile = null;
+            document.getElementById('cvFile').value = '';
+            document.getElementById('cvUploadPlaceholder').classList.remove('hidden');
+            document.getElementById('cvFileInfo').classList.add('hidden');
+        }
+
+        function dropCVHandler(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Fayl həcmi 5MB-dan böyük ola bilməz!');
+                    return;
+                }
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                document.getElementById('cvFile').files = dt.files;
+                currentCVFile = file;
+                document.getElementById('cvFileName').textContent = file.name;
+                document.getElementById('cvFileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                document.getElementById('cvUploadPlaceholder').classList.add('hidden');
+                document.getElementById('cvFileInfo').classList.remove('hidden');
+            }
+        }
+
+        function submitCV(e) {
+            e.preventDefault();
+            if (!currentCVFile) {
+                alert('Zəhmət olmasa CV faylı yükləyin!');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const cvData = {
+                    id: Date.now(),
+                    name: document.getElementById('cvName').value,
+                    email: document.getElementById('cvEmail').value,
+                    phone: document.getElementById('cvPhone').value,
+                    position: document.getElementById('cvPosition').value,
+                    skills: document.getElementById('cvSkills').value,
+                    about: document.getElementById('cvAbout').value,
+                    linkedin: document.getElementById('cvLinkedin').value,
+                    portfolio: document.getElementById('cvPortfolio').value,
+                    fileName: currentCVFile.name,
+                    fileData: event.target.result,
+                    fileType: currentCVFile.type,
+                    date: new Date().toLocaleString('az-AZ')
+                };
+
+                let cvs = JSON.parse(localStorage.getItem('cybercode_cvs') || '[]');
+                cvs.push(cvData);
+                localStorage.setItem('cybercode_cvs', JSON.stringify(cvs));
+
+                showSuccess('CV-niz uğurla göndərildi! Tezliklə sizinlə əlaqə saxlayacağıq.');
+                document.getElementById('cvForm').reset();
+                removeCV();
+            };
+            reader.readAsDataURL(currentCVFile);
+        }
+
+        // Rendering Functions
+        function renderTeam() {
+            const grid = document.getElementById('teamGrid');
+            const emptyMsg = document.getElementById('emptyTeamMessage');
+            
+            if (teamMembers.length === 0) {
+                grid.innerHTML = '';
+                emptyMsg.classList.remove('hidden');
+                return;
+            }
+            
+            emptyMsg.classList.add('hidden');
+            grid.innerHTML = teamMembers.map((member, index) => `
+                <div class="group reveal active">
+                    <div class="relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-lg card-hover border border-gray-200 dark:border-gray-700 h-full flex flex-col">
+                        <div class="relative h-64 overflow-hidden">
+                            <img src="${member.image}" alt="${member.name}" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <button onclick="openEditModal(${index})" class="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white hover:bg-primary transition">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                            <div class="absolute bottom-4 left-0 right-0 flex justify-center space-x-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                ${member.linkedin ? `<a href="${member.linkedin}" target="_blank" class="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white hover:bg-[#0077b5] transition"><i class="fab fa-linkedin-in"></i></a>` : ''}
+                                ${member.github ? `<a href="${member.github}" target="_blank" class="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white hover:bg-gray-800 transition"><i class="fab fa-github"></i></a>` : ''}
+                                ${member.email ? `<a href="mailto:${member.email}" class="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-white hover:bg-red-500 transition"><i class="fas fa-envelope"></i></a>` : ''}
+                            </div>
+                        </div>
+                        <div class="p-6 flex-1 flex flex-col">
+                            <h3 class="font-bold text-xl mb-1 text-gray-900 dark:text-white">${member.name}</h3>
+                            <p class="text-primary font-medium mb-3">${member.role}</p>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 flex-1">${member.bio}</p>
+                            ${member.skills && member.skills.length > 0 ? `
+                                <div class="flex flex-wrap gap-2 mb-3">
+                                    ${member.skills.slice(0, 3).map(skill => `<span class="px-2 py-1 bg-primary/10 text-primary rounded text-xs">${skill}</span>`).join('')}
+                                    ${member.skills.length > 3 ? `<span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-500">+${member.skills.length - 3}</span>` : ''}
+                                </div>
+                            ` : ''}
+                            <div class="flex items-center justify-between text-sm text-gray-500 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                ${member.experience ? `<span><i class="fas fa-briefcase mr-1"></i> ${member.experience} il</span>` : ''}
+                                ${member.education ? `<span class="truncate max-w-[120px]" title="${member.education}"><i class="fas fa-graduation-cap mr-1"></i> ${member.education}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+            grid.innerHTML = defaultProjects.map((project) => `
+                <div class="group relative overflow-hidden rounded-2xl reveal">
+                    <div class="aspect-[4/3] overflow-hidden">
+                        <img src="${project.image}" alt="${project.title}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-6">
+                        <div class="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                ${project.tech.map(t => `<span class="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs text-white border border-white/30">${t}</span>`).join('')}
+                            </div>
+                            <h3 class="text-white text-xl font-bold mb-2">${project.title}</h3>
+                            <p class="text-gray-300 text-sm mb-4">${project.desc}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Edit Functions
+        function openEditModal(index) {
+            const member = teamMembers[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('editName').value = member.name;
+            document.getElementById('editRole').value = member.role;
+            document.getElementById('editBio').value = member.bio || '';
+            document.getElementById('editExp').value = member.experience || '';
+            document.getElementById('editEdu').value = member.education || '';
+            document.getElementById('editSkills').value = member.skills ? member.skills.join(', ') : '';
+            document.getElementById('editLinkedin').value = member.linkedin || '';
+            document.getElementById('editGithub').value = member.github || '';
+            document.getElementById('editEmail').value = member.email || '';
+            document.getElementById('editImagePreview').src = member.image;
+            
+            document.getElementById('editModal').classList.remove('hidden');
+            document.getElementById('editModal').classList.add('flex');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').classList.remove('flex');
+        }
+
+        function previewEditImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editImagePreview').src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function dropHandlerEdit(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('editImagePreview').src = event.target.result;
+                };
+                reader.readAsDataURL(files[0]);
+            }
+        }
+
+        function updateMember(e) {
+            e.preventDefault();
+            const index = parseInt(document.getElementById('editIndex').value);
+            
+            teamMembers[index].name = document.getElementById('editName').value;
+            teamMembers[index].role = document.getElementById('editRole').value;
+            teamMembers[index].bio = document.getElementById('editBio').value;
+            teamMembers[index].experience = document.getElementById('editExp').value;
+            teamMembers[index].education = document.getElementById('editEdu').value;
+            teamMembers[index].skills = document.getElementById('editSkills').value.split(',').map(s => s.trim()).filter(s => s);
+            teamMembers[index].linkedin = document.getElementById('editLinkedin').value;
+            teamMembers[index].github = document.getElementById('editGithub').value;
+            teamMembers[index].email = document.getElementById('editEmail').value;
+            
+            const fileInput = document.getElementById('editImage');
+            if (fileInput.files && fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    teamMembers[index].image = e.target.result;
+                    finalizeUpdate();
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                finalizeUpdate();
+            }
+        }
+
+        function finalizeUpdate() {
+            localStorage.setItem('cybercode_team', JSON.stringify(teamMembers));
+            renderTeam();
+            closeEditModal();
+            document.getElementById('editImage').value = '';
+        }
+
+        function deleteMember() {
+            const index = parseInt(document.getElementById('editIndex').value);
+            if(confirm('Bu üzvü silmək istədiyinizə əminsiniz?')) {
+                teamMembers.splice(index, 1);
+                localStorage.setItem('cybercode_team', JSON.stringify(teamMembers));
+                renderTeam();
+                updateHeroStats();
+                updateCodeTeamSize();
+                closeEditModal();
+            }
+        }
+
+        // Admin Panel Functions
+        function openAdminPanel() {
+            const password = prompt('Admin şifrəsini daxil edin: (standart: admin123)');
+            if (password !== 'admin123') {
+                alert('Yanlış şifrə!');
+                return;
+            }
+            
+            document.getElementById('adminModal').classList.remove('hidden');
+            document.getElementById('adminModal').classList.add('flex');
+            loadAdminData();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.add('hidden');
+            document.getElementById('adminModal').classList.remove('flex');
+        }
+
+        function switchAdminTab(tab) {
+            ['cvs', 'messages', 'news', 'team'].forEach(t => {
+                document.getElementById('admin-' + t).classList.add('hidden');
+                const btn = document.getElementById('tab-' + t);
+                btn.classList.remove('tab-active');
+                btn.classList.add('bg-gray-200', 'dark:bg-gray-700');
+            });
+            
+            document.getElementById('admin-' + tab).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-' + tab);
+            activeBtn.classList.add('tab-active');
+            activeBtn.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+        }
+
+        function loadAdminData() {
+            // Load CVs
+            const cvs = JSON.parse(localStorage.getItem('cybercode_cvs') || '[]');
+            document.getElementById('cvCount').textContent = cvs.length;
+            
+            const cvList = document.getElementById('cvList');
+            const noCvs = document.getElementById('noCvs');
+            
+            if (cvs.length === 0) {
+                cvList.innerHTML = '';
+                noCvs.classList.remove('hidden');
+            } else {
+                noCvs.classList.add('hidden');
+                cvList.innerHTML = cvs.map((cv, index) => `
+                    <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">${cv.name}</h4>
+                                <p class="text-sm text-gray-500">${cv.position} • ${cv.date}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="viewCVDetail(${index})" class="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition text-sm">
+                                <i class="fas fa-eye mr-1"></i> Bax
+                            </button>
+                            <button onclick="deleteCV(${index})" class="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition text-sm">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Load Messages
+            const messages = JSON.parse(localStorage.getItem('cybercode_messages') || '[]');
+            document.getElementById('msgCount').textContent = messages.length;
+            
+            const msgList = document.getElementById('messageList');
+            const noMessages = document.getElementById('noMessages');
+            
+            if (messages.length === 0) {
+                msgList.innerHTML = '';
+                noMessages.classList.remove('hidden');
+            } else {
+                noMessages.classList.add('hidden');
+                msgList.innerHTML = messages.map((msg, index) => `
+                    <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h4 class="font-bold">${msg.name}</h4>
+                                <p class="text-sm text-gray-500">${msg.email} • ${msg.date}</p>
+                            </div>
+                            <button onclick="deleteMessage(${index})" class="text-red-500 hover:text-red-600">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <p class="text-gray-700 dark:text-gray-300 text-sm bg-white dark:bg-gray-800 p-3 rounded-lg mt-2">${msg.message}</p>
+                    </div>
+                `).join('');
+            }
+
+            // Load News
+            const news = JSON.parse(localStorage.getItem('cybercode_news') || '[]');
+            document.getElementById('newsCount').textContent = news.length;
+            
+            const adminNewsList = document.getElementById('adminNewsList');
+            adminNewsList.innerHTML = news.map((item, index) => `
+                <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600">
+                    <div class="flex justify-between items-start">
+                        <div class="flex gap-4">
+                            <img src="${item.image}" class="w-20 h-20 object-cover rounded-lg">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="px-2 py-1 bg-primary/20 text-primary rounded text-xs">${item.category}</span>
+                                    ${item.pinned ? '<span class="px-2 py-1 bg-accent/20 text-accent rounded text-xs"><i class="fas fa-thumbtack mr-1"></i>Sabit</span>' : ''}
+                                    ${item.breaking ? '<span class="px-2 py-1 bg-red-500/20 text-red-500 rounded text-xs"><i class="fas fa-bolt mr-1"></i>Breaking</span>' : ''}
+                                </div>
+                                <h4 class="font-bold">${item.title}</h4>
+                                <p class="text-sm text-gray-500">${item.date}</p>
+                            </div>
+                        </div>
+                        <button onclick="deleteNews(${item.id})" class="text-red-500 hover:text-red-600 px-3 py-2">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Load Team
+            const adminTeamList = document.getElementById('adminTeamList');
+            adminTeamList.innerHTML = teamMembers.map((member, index) => `
+                <div class="p-4 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <img src="${member.image}" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-bold">${member.name}</h4>
+                            <p class="text-sm text-gray-500">${member.role}</p>
+                        </div>
+                    </div>
+                    <button onclick="openEditModal(${index})" class="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition text-sm">
+                        <i class="fas fa-edit mr-1"></i> Redaktə
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function viewCVDetail(index) {
+            const cvs = JSON.parse(localStorage.getItem('cybercode_cvs') || '[]');
+            const cv = cvs[index];
+            
+            document.getElementById('cvDetailName').textContent = cv.name;
+            document.getElementById('cvDetailPosition').textContent = cv.position;
+            
+            document.getElementById('cvDetailContent').innerHTML = `
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-500 mb-1">Email</h4>
+                        <p class="text-lg">${cv.email}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-500 mb-1">Telefon</h4>
+                        <p class="text-lg">${cv.phone || '-'}</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-500 mb-1">LinkedIn</h4>
+                        <a href="${cv.linkedin}" target="_blank" class="text-primary hover:underline break-all">${cv.linkedin || '-'}</a>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-500 mb-1">Portfolio</h4>
+                        <a href="${cv.portfolio}" target="_blank" class="text-primary hover:underline break-all">${cv.portfolio || '-'}</a>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-500 mb-2">Bacarıqlar</h4>
+                    <div class="flex flex-wrap gap-2">
+                        ${cv.skills ? cv.skills.split(',').map(s => `<span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">${s.trim()}</span>`).join('') : '-'}
+                    </div>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-500 mb-2">Özü haqqında</h4>
+                    <p class="text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 p-4 rounded-xl">${cv.about}</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-500 mb-2">CV Faylı</h4>
+                    <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                        <i class="fas fa-file-pdf text-3xl text-red-500"></i>
+                        <div>
+                            <p class="font-medium">${cv.fileName}</p>
+                            <p class="text-sm text-gray-500">Göndərilib: ${cv.date}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('cvDetailModal').classList.remove('hidden');
+            document.getElementById('cvDetailModal').classList.add('flex');
+        }
+
+        function closeCVDetail() {
+            document.getElementById('cvDetailModal').classList.add('hidden');
+            document.getElementById('cvDetailModal').classList.remove('flex');
+        }
+
+        function downloadCV() {
+            const name = document.getElementById('cvDetailName').textContent;
+            const cvs = JSON.parse(localStorage.getItem('cybercode_cvs') || '[]');
+            const cv = cvs.find(c => c.name === name);
+            
+            if (cv && cv.fileData) {
+                const link = document.createElement('a');
+                link.href = cv.fileData;
+                link.download = cv.fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        function deleteCV(index) {
+            if(!confirm('Bu CV-ni silmək istədiyinizə əminsiniz?')) return;
+            let cvs = JSON.parse(localStorage.getItem('cybercode_cvs') || '[]');
+            cvs.splice(index, 1);
+            localStorage.setItem('cybercode_cvs', JSON.stringify(cvs));
+            loadAdminData();
+        }
+
+        function deleteMessage(index) {
+            if(!confirm('Bu mesajı silmək istədiyinizə əminsiniz?')) return;
+            let messages = JSON.parse(localStorage.getItem('cybercode_messages') || '[]');
+            messages.splice(index, 1);
+            localStorage.setItem('cybercode_messages', JSON.stringify(messages));
+            loadAdminData();
+        }
+
+        // UI Functions
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function reveal() {
+            const reveals = document.querySelectorAll('.reveal');
+            reveals.forEach(element => {
+                const windowHeight = window.innerHeight;
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < windowHeight - elementVisible) {
+                    element.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('glass', 'shadow-lg');
+            } else {
+                navbar.classList.remove('glass', 'shadow-lg');
+            }
+        });
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    document.getElementById('mobile-menu').classList.add('hidden');
+                }
+            });
+        });
+
+        function showSuccess(message) {
+            document.getElementById('successMessage').textContent = message;
+            const modal = document.getElementById('successModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            setTimeout(() => {
+                modalContent.classList.remove('scale-95', 'opacity-0');
+                modalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('successModal');
+            const modalContent = document.getElementById('modalContent');
+            
+            modalContent.classList.remove('scale-100', 'opacity-100');
+            modalContent.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                id: Date.now(),
+                name: this.querySelector('input[type="text"]').value,
+                email: this.querySelector('input[type="email"]').value,
+                subject: this.querySelector('select').value,
+                message: this.querySelector('textarea').value,
+                date: new Date().toLocaleString('az-AZ')
+            };
+            
+            let messages = JSON.parse(localStorage.getItem('cybercode_messages') || '[]');
+            messages.push(formData);
+            localStorage.setItem('cybercode_messages', JSON.stringify(messages));
+            
+            showSuccess('Mesajınız uğurla göndərildi! Tezliklə sizinlə əlaqə saxlayacağıq.');
+            this.reset();
+        });
+
+        document.getElementById('successModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ===== EDITABLE ACHIEVEMENTS AND PROJECTS FUNCTIONS =====
+
+        // Default achievements data
+        const defaultAchievements = [
+            {
+                id: 1,
+                icon: 'fa-trophy',
+                color: 'from-primary to-cyan-400',
+                title: 'Qalibiyyətlərimiz',
+                content: 'Beynəlxalq hackathonlarda 5 qızıl medal, 20+ uğurlu layihə və 1000+ məmnun müştəri.'
+            },
+            {
+                id: 2,
+                icon: 'fa-award',
+                color: 'from-secondary to-purple-400',
+                title: 'Mükafatlarımız',
+                content: '"İlin Startup-ı", "Ən Yaxşı Developer Komandası" və digər 15+ beynəlxalq mükafat.'
+            },
+            {
+                id: 3,
+                icon: 'fa-briefcase',
+                color: 'from-accent to-pink-400',
+                title: 'Təcrübəmiz',
+                content: '5+ illik təcrübə\n50+ beynəlxalq layihə\n30+ texnologiya\n24/7 dəstək'
+            }
+        ];
+
+        // Load achievements from localStorage or use defaults
+        function loadAchievements() {
+            let achievements = JSON.parse(localStorage.getItem('cybercode_achievements'));
+            if (!achievements || achievements.length === 0) {
+                achievements = defaultAchievements;
+                localStorage.setItem('cybercode_achievements', JSON.stringify(achievements));
+            }
+            renderAchievements(achievements);
+        }
+
+        // Render achievements
+        function renderAchievements(achievements) {
+            const grid = document.getElementById('achievementsGrid');
+            if (!grid) return;
+
+            grid.innerHTML = achievements.map((item, index) => {
+                const contentLines = item.content.split('\n').map(line => 
+                    `<div class="flex items-center gap-2"><i class="fas fa-check text-accent"></i> ${line}</div>`
+                ).join('');
+
+                const isList = item.content.includes('\n');
+
+                return `
+                <div class="reveal active">
+                    <div class="h-full p-8 rounded-3xl bg-white dark:bg-gray-800 shadow-xl border-2 border-transparent hover:border-primary transition value-card relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-${item.color.split(' ')[0].replace('from-', '')}/10 rounded-full -mr-16 -mt-16"></div>
+                        <div class="relative z-10">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-white text-2xl shadow-lg">
+                                    <i class="fas ${item.icon}"></i>
+                                </div>
+                                <button onclick="editAchievement(${index})" class="opacity-0 group-hover:opacity-100 transition-opacity p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                    <i class="fas fa-edit text-primary"></i>
+                                </button>
+                            </div>
+                            <h3 class="text-2xl font-bold mb-4">${item.title}</h3>
+                            ${isList ? 
+                                `<div class="space-y-2 text-sm text-gray-600 dark:text-gray-300">${contentLines}</div>` :
+                                `<p class="text-gray-600 dark:text-gray-300 leading-relaxed">${item.content}</p>`
+                            }
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Open achievement editor
+        function openAchievementEditor() {
+            const password = prompt('Dəyişiklik etmək üçün şifrəni daxil edin:');
+            if (password !== 'admin123') {
+                alert('Yanlış şifrə!');
+                return;
+            }
+
+            const title = prompt('Qalibiyyət başlığı:');
+            if (!title) return;
+
+            const content = prompt('Qalibiyyət təsviri (\n ilə sətirləri ayırın):');
+            if (!content) return;
+
+            const icon = prompt('İkon (fa-trophy, fa-award, fa-star, fa-medal və s.):', 'fa-trophy');
+
+            let achievements = JSON.parse(localStorage.getItem('cybercode_achievements')) || defaultAchievements;
+            achievements.push({
+                id: Date.now(),
+                icon: icon || 'fa-trophy',
+                color: 'from-primary to-cyan-400',
+                title: title,
+                content: content
+            });
+
+            localStorage.setItem('cybercode_achievements', JSON.stringify(achievements));
+            renderAchievements(achievements);
+            showSuccess('Qalibiyyət əlavə edildi!');
+        }
+
+        // Edit achievement
+        function editAchievement(index) {
+            const password = prompt('Dəyişiklik etmək üçün şifrəni daxil edin:');
+            if (password !== 'admin123') {
+                alert('Yanlış şifrə!');
+                return;
+            }
+
+            let achievements = JSON.parse(localStorage.getItem('cybercode_achievements')) || defaultAchievements;
+            const item = achievements[index];
+
+            const newTitle = prompt('Yeni başlıq:', item.title);
+            if (newTitle === null) return;
+
+            const newContent = prompt('Yeni təsvir:', item.content);
+            if (newContent === null) return;
+
+            const newIcon = prompt('Yeni ikon:', item.icon);
+
+            if (newTitle === '' && newContent === '') {
+                // Delete if both empty
+                if (confirm('Bu qalibiyyəti silmək istədiyinizə əminsiniz?')) {
+                    achievements.splice(index, 1);
+                }
+            } else {
+                item.title = newTitle || item.title;
+                item.content = newContent || item.content;
+                if (newIcon) item.icon = newIcon;
+            }
+
+            localStorage.setItem('cybercode_achievements', JSON.stringify(achievements));
+            renderAchievements(achievements);
+        }
+
+        // ===== PROJECTS FUNCTIONS =====
+
+        // Default projects
+        const defaultProjectsData = [
+            { title: "E-Ticarət Platforması", desc: "React & Node.js ilə hazırlanmış miqyaslı onlayn satış sistemi", tech: ["React", "Node.js", "MongoDB"], image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=450&fit=crop" },
+            { title: "AI Chatbot Sistemi", desc: "Süni intellekt əsasında müştəri dəstək chatbotu", tech: ["Python", "TensorFlow", "NLP"], image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=450&fit=crop" },
+            { title: "Blockchain Wallet", desc: "Təhlükəsiz kripto valyuta cüzdanı və DeFi platforması", tech: ["Solidity", "Web3.js", "Ethereum"], image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&h=450&fit=crop" }
+        ];
+
+        // Load projects from localStorage
+        function loadProjects() {
+            let projects = JSON.parse(localStorage.getItem('cybercode_projects'));
+            if (!projects || projects.length === 0) {
+                projects = defaultProjectsData;
+                localStorage.setItem('cybercode_projects', JSON.stringify(projects));
+            }
+            renderProjectsEditable(projects);
+        }
+
+        // Render editable projects
+        function renderProjectsEditable(projects) {
+            const grid = document.getElementById('projectsGrid');
+            if (!grid) return;
+
+            grid.innerHTML = projects.map((project, index) => `
+                <div class="group relative overflow-hidden rounded-2xl reveal active">
+                    <div class="aspect-[4/3] overflow-hidden">
+                        <img src="${project.image}" alt="${project.title}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    </div>
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-6">
+                        <div class="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                ${project.tech.map(t => `<span class="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs text-white border border-white/30">${t}</span>`).join('')}
+                            </div>
+                            <h3 class="text-white text-xl font-bold mb-2">${project.title}</h3>
+                            <p class="text-gray-300 text-sm mb-4">${project.desc}</p>
+                            <button onclick="editProject(${index})" class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition">
+                                <i class="fas fa-edit mr-2"></i>Redaktə Et
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Open project editor
+        function openProjectEditor() {
+            const password = prompt('Dəyişiklik etmək üçün şifrəni daxil edin:');
+            if (password !== 'admin123') {
+                alert('Yanlış şifrə!');
+                return;
+            }
+
+            const title = prompt('Layihə adı:');
+            if (!title) return;
+
+            const desc = prompt('Layihə təsviri:');
+            if (!desc) return;
+
+            const tech = prompt('Texnologiyalar (vergüllə ayırın):');
+            const image = prompt('Şəkil URL (boş qalsa default şəkil istifadə olunacaq):') || 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&h=450&fit=crop';
+
+            let projects = JSON.parse(localStorage.getItem('cybercode_projects')) || defaultProjectsData;
+            projects.push({
+                title: title,
+                desc: desc,
+                tech: tech ? tech.split(',').map(t => t.trim()) : ['Web'],
+                image: image
+            });
+
+            localStorage.setItem('cybercode_projects', JSON.stringify(projects));
+            renderProjectsEditable(projects);
+            showSuccess('Layihə əlavə edildi!');
+        }
+
+        // Edit project
+        function editProject(index) {
+            const password = prompt('Dəyişiklik etmək üçün şifrəni daxil edin:');
+            if (password !== 'admin123') {
+                alert('Yanlış şifrə!');
+                return;
+            }
+
+            let projects = JSON.parse(localStorage.getItem('cybercode_projects')) || defaultProjectsData;
+            const project = projects[index];
+
+            const newTitle = prompt('Yeni layihə adı:', project.title);
+            if (newTitle === null) return;
+
+            const newDesc = prompt('Yeni təsvir:', project.desc);
+            if (newDesc === null) return;
+
+            const newTech = prompt('Yeni texnologiyalar:', project.tech.join(', '));
+            const newImage = prompt('Yeni şəkil URL:', project.image);
+
+            if (newTitle === '' && newDesc === '') {
+                if (confirm('Bu layihəni silmək istədiyinizə əminsiniz?')) {
+                    projects.splice(index, 1);
+                }
+            } else {
+                project.title = newTitle || project.title;
+                project.desc = newDesc || project.desc;
+                if (newTech !== null) project.tech = newTech.split(',').map(t => t.trim());
+                if (newImage) project.image = newImage;
+            }
+
+            localStorage.setItem('cybercode_projects', JSON.stringify(projects));
+            renderProjectsEditable(projects);
+        }
+
+        // Initialize editable sections on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Call existing init code
+            const savedTeam = localStorage.getItem('cybercode_team');
+            const setupDone = localStorage.getItem('cybercode_setup_done');
+
+            if (savedTeam && setupDone) {
+                teamMembers = JSON.parse(savedTeam);
+                document.getElementById('setupModal').style.display = 'none';
+                renderTeam();
+                loadProjects(); // Load editable projects
+                renderNews();
+                updateHeroStats();
+                updateCodeTeamSize();
+                updateTicker();
+                loadAchievements(); // Load editable achievements
+            }
+
+            if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+
+            window.addEventListener('scroll', reveal);
+            reveal();
+        });
+    </script>
+</body>
+</html>
